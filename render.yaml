@@ -1,0 +1,61 @@
+services:
+  # Web Panel Service
+  - type: web
+    name: timeout-panel
+    runtime: docker
+    dockerfilePath: ./panel/Dockerfile
+    dockerContext: ./panel
+    region: frankfurt
+    plan: free
+    branch: main
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: API_SECRET_KEY
+        sync: false
+
+  # Telegram Bot Background Worker
+  - type: worker
+    name: timeout-bot
+    runtime: docker
+    dockerfilePath: ./bot/Dockerfile
+    dockerContext: ./bot
+    region: frankfurt
+    plan: free
+    branch: main
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_BOT_USERNAME
+        sync: false
+      - key: API_BASE_URL
+        fromService:
+          type: web
+          name: timeout-panel
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: API_SECRET_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+
