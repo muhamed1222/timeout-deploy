@@ -1,0 +1,68 @@
+version: '3.8'
+
+# Docker Compose для локальной разработки
+# Использование: docker compose -f docker-compose.dev.yml up
+
+services:
+  # Панель управления (development mode)
+  panel:
+    build:
+      context: ./panel
+      dockerfile: Dockerfile
+      target: builder  # Используем builder stage для разработки
+    container_name: timeout-panel-dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+      - "5173:5173"  # Vite dev server
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - DATABASE_URL=${DATABASE_URL}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - SESSION_SECRET=${SESSION_SECRET:-dev-secret-key}
+    volumes:
+      - ./panel:/app
+      - /app/node_modules
+      - /app/dist
+    networks:
+      - timeout-network
+    command: npm run dev
+
+  # Telegram бот (development mode)
+  bot:
+    build:
+      context: ./bot
+      dockerfile: Dockerfile
+      target: builder
+    container_name: timeout-bot-dev
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=development
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_BOT_USERNAME=${TELEGRAM_BOT_USERNAME}
+      - API_BASE_URL=${API_BASE_URL:-http://panel:3000/api}
+      - API_SECRET_KEY=${API_SECRET_KEY:-secret_key_12345}
+      - DATABASE_URL=${DATABASE_URL}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+    volumes:
+      - ./bot:/app
+      - /app/node_modules
+      - /app/dist
+    networks:
+      - timeout-network
+    command: npm run dev
+    depends_on:
+      - panel
+
+networks:
+  timeout-network:
+    driver: bridge
+    name: timeout-network-dev
+
