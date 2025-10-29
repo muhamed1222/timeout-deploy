@@ -1,0 +1,6 @@
+[submodule "panel"]
+	path = panel
+	url = https://github.com/muhamed1222/timeout.git
+[submodule "bot"]
+	path = bot
+	url = https://github.com/muhamed1222/timeout-telegram-bot.git
